@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QVBoxLayout, QListWidget
 
 class VideoCompressorApp(QWidget):
     def __init__(self):
@@ -11,46 +11,57 @@ class VideoCompressorApp(QWidget):
 
     def initUI(self):
         # 创建按钮
-        self.selectFolderButton = QPushButton('选择要压缩的文件夹', self)
-        self.selectFolderButton.clicked.connect(self.showFolderDialog)
+        self.selectFilesButton = QPushButton('选择文件', self)
+        self.selectFilesButton.clicked.connect(self.showFilesDialog)
+
+        # 创建列表控件
+        self.fileListWidget = QListWidget()
+
+        # 创建压缩按钮
+        self.compressButton = QPushButton('压缩选中文件', self)
+        self.compressButton.clicked.connect(self.compressSelectedFiles)
 
         # 垂直布局
         vbox = QVBoxLayout()
-        vbox.addWidget(self.selectFolderButton)
+        vbox.addWidget(self.selectFilesButton)
+        vbox.addWidget(self.fileListWidget)
+        vbox.addWidget(self.compressButton)
 
         # 设置布局
         self.setLayout(vbox)
 
         # 设置窗口属性
-        self.setGeometry(300, 300, 300, 150)
+        self.setGeometry(300, 300, 400, 300)
         self.setWindowTitle('视频压缩器')
         self.show()
 
-    def showFolderDialog(self):
+    def showFilesDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog  # 使用Qt风格的文件对话框
 
-        # 获取用户选择的文件夹路径
-        selected_folder = QFileDialog.getExistingDirectory(self, "选择要压缩的文件夹", options=options)
+        # 获取用户选择的文件路径列表
+        selected_files, _ = QFileDialog.getOpenFileNames(self, "选择文件", "", options=options)
 
-        if selected_folder:
-            print(f"选择的文件夹路径: {selected_folder}")
-            self.compressVideos(selected_folder)
+        if selected_files:
+            print(f"选择的文件列表: {selected_files}")
+            self.updateFileList(selected_files)
 
-    def compressVideos(self, input_folder):
-        output_folder = os.path.join(os.path.abspath(input_folder), "output")
-        os.makedirs(output_folder, exist_ok=True)
+    def updateFileList(self, file_paths):
+        # 清空列表
+        self.fileListWidget.clear()
 
-        # 获取输入目录中的所有视频文件
-        input_files = [f for f in os.listdir(input_folder) if f.endswith((".mp4", ".avi", ".mkv"))]
+        # 将文件路径添加到列表中
+        for file_path in file_paths:
+            self.fileListWidget.addItem(file_path)
 
-        # 遍历每个视频文件并压缩
-        for input_file in input_files:
-            input_path = os.path.join(input_folder, input_file)
-            output_path = os.path.join(output_folder, input_file)
+    def compressSelectedFiles(self):
+        # 遍历列表中的文件路径并压缩
+        for row in range(self.fileListWidget.count()):
+            input_file = self.fileListWidget.item(row).text()
+            output_file = os.path.join(os.path.dirname(input_file), "output", os.path.basename(input_file))
 
             print(f"正在压缩文件: {input_file}")
-            self.compressVideo(input_path, output_path)
+            self.compressVideo(input_file, output_file)
 
         print("压缩完成！")
 
