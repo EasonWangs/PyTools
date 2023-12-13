@@ -58,9 +58,15 @@ class VideoCompressorApp(QWidget):
         # 遍历列表中的文件路径并压缩
         for row in range(self.fileListWidget.count()):
             input_file = self.fileListWidget.item(row).text()
-            output_file = os.path.join(os.path.dirname(input_file), "output", os.path.basename(input_file))
+            output_dir = os.path.join(os.path.dirname(input_file), "output")
+            output_file = os.path.join(output_dir, os.path.basename(input_file))
 
             print(f"正在压缩文件: {input_file}")
+
+            # 检查输出目录是否存在，如果不存在则创建
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+
             self.compressVideo(input_file, output_file)
 
         print("压缩完成！")
