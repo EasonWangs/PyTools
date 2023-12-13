@@ -1,4 +1,5 @@
 import os
+import shlex
 import sys
 import subprocess
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QFileDialog, QVBoxLayout, QListWidget
@@ -67,7 +68,7 @@ class VideoCompressorApp(QWidget):
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
 
-            self.compressVideo(input_file, output_file)
+            self.compressVideo(shlex.quote(input_file), shlex.quote(output_file))
 
         print("压缩完成！")
 
@@ -76,7 +77,10 @@ class VideoCompressorApp(QWidget):
         ffmpeg_cmd = f"ffmpeg -i {input_path} -c:v libx264 -crf 23 -c:a aac -strict experimental -b:a 128k {output_path}"
 
         # 调用系统命令
-        subprocess.run(ffmpeg_cmd, shell=True)
+        try:
+            subprocess.run(ffmpeg_cmd, shell=True, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"命令执行失败: {e}")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
